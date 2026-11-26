@@ -29,8 +29,8 @@ jobs:
       - name: Offline installer against a throwaway profile
         run: node test/installer.mjs
 
-  # The schema contract and the registry mount need the real DSH runtime, which
-  # is only published as prereleases.
+  # The schema contract, the registry mount and the smoke test need the real
+  # DSH runtime, which is only published as prereleases.
   runtime:
     name: runtime / node 22 / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -44,6 +44,21 @@ jobs:
         with:
           node-version: 22
 
+      # Installed into the checkout rather than globally: the plugin resolves a
+      # plugin-local `node_modules` first, so this works no matter what global
+      # prefix the runner happens to use. The registry test launches a browser,
+      # so this has to happen before it.
+      - name: Install Playwright into the checkout
+        run: npm i --no-save --no-package-lock playwright playwright-core
+
+      - name: Install Chromium with system libraries (Linux)
+        if: runner.os == 'Linux'
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Chromium (macOS and Windows)
+        if: runner.os != 'Linux'
+        run: npx playwright install chromium
+
       # `npm i -g @deepseek-ai/dsh` fails on npm 10: every published version is a
       # prerelease, so the bare spec resolves through `*`, which semver does not
       # allow to match a prerelease. Ask the registry for the exact version its
@@ -54,23 +69,16 @@ jobs:
           version="$(npm view @deepseek-ai/dsh dist-tags.latest)"
           echo "DSH latest tag: ${version}"
           npm i -g "@deepseek-ai/dsh@${version}" || npm i -g @deepseek-ai/dsh@next
+          # GitHub's Windows runners put global packages under C:\npm\prefix,
+          # which is not where a naive probe looks. Tell the tests where npm
+          # actually wrote them instead of guessing.
+          echo "DSH_TOOLS_ROOT=$(npm root -g)" >> "$GITHUB_ENV"
 
       - name: Schema contract (byte-identical to defineTool)
         run: node test/verify-tools.mjs
 
       - name: Registry mount with the real executor
         run: node test/registry.mjs
-
-      - name: Install Playwright
-        run: npm i -g playwright playwright-core
-
-      - name: Install Chromium with system libraries (Linux only)
-        if: runner.os == 'Linux'
-        run: playwright install chromium --with-deps
-
-      - name: Install Chromium (macOS and Windows)
-        if: runner.os != 'Linux'
-        run: playwright install chromium
 
       - name: Browser smoke test
         run: node test/smoke.mjs

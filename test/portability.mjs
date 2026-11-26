@@ -20,7 +20,7 @@
 
 import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { delimiter, isAbsolute, join } from 'node:path'
 import { dshHome, effectiveHeadless, effectiveVisibility, launchPlans, npmGlobalRoots, visibilityArgs } from '../lib/session.mjs'
 
@@ -41,6 +41,17 @@ function checkGlobalRoots() {
   // rejected rather than silently opened against the working directory.
   const withNodePath = npmGlobalRoots({ NODE_PATH: ['relative/entry', process.cwd()].join(delimiter) })
   for (const root of withNodePath) assert.ok(isAbsolute(root), `relative NODE_PATH leaked through: ${root}`)
+
+  // A configured npm prefix wins, because that is where `npm i -g` wrote the
+  // package. GitHub's Windows runners set it to C:\npm\prefix; probing only
+  // %APPDATA%\npm there finds nothing, which is exactly the bug this guards.
+  const prefix = tmpdir()
+  const configured = npmGlobalRoots({ npm_config_prefix: prefix })
+  assert.equal(configured[0], prefix, 'the npm-configured prefix must be probed first')
+  assert.ok(
+    configured.includes(prefix) || configured.includes(join(prefix, 'node_modules')),
+    'the configured prefix must survive filtering',
+  )
   process.stdout.write(`${CHECK} global npm roots are absolute on every platform\n`)
 }
 
