@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: node ${{ matrix.node }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # The contract and registry tests need the real DSH runtime, not a stub.
+      - name: Install DSH
+        run: npm i -g @deepseek-ai/dsh
+
+      - name: Install Playwright and a browser
+        run: |
+          npm i -g playwright playwright-core
+          playwright install chromium
+
+      - name: Schema contract (byte-identical to defineTool)
+        run: node test/verify-tools.mjs
+
+      # Runs first among the tests that need nothing: a broken launch policy or a
+      # relative npm root is exactly the class of bug that only shows up off Windows.
+      - name: Portability
+        run: node test/portability.mjs
+
+      - name: Registry mount
+        run: node test/registry.mjs
+
+      - name: Browser smoke
+        run: node test/smoke.mjs
+
+      # Informational: the numbers move between machines, so nothing asserts them.
+      - name: Token benchmark
+        run: node bench/tokens.mjs

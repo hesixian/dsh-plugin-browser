@@ -1,0 +1,19 @@
+# Dependencies (this plugin has none at runtime; these appear only when you
+# install Playwright or a DSH test harness locally)
+node_modules/
+
+# Installer backups written next to a profile's package.json / pnpm-lock.yaml
+*.bak-*
+*.bak-*-dsh-browser
+
+# Benchmarks and smoke tests write their fixtures and screenshots here
+bench/*.json
+shots/
+.tmp/
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,56 @@
+# @hesixian/dsh-plugin-browser profile layer.
+#
+# Registers the eight in-process browser tools on the DSH host's tool registry.
+# Everything this layer adds runs inside the host process: the Playwright
+# library is imported on first tool use, and the browser is launched once and
+# reused for the process lifetime. No child process, no JSON-RPC, no MCP server.
+#
+# The layer id stays `dsh-browser` so that an override written against it keeps
+# working across versions — match on the id, not on the package name.
+#
+# Configuration (row `config`, all optional — see lib/session.mjs DEFAULTS):
+#   visibility: 'hidden'     Where the browser lives; this is the foreground policy.
+#                            'hidden'    no window at all — the only mode that
+#                                        cannot steal your mouse, keyboard or IME.
+#                            'offscreen' a real window parked outside the desktop.
+#                                        Out of sight, but Windows still hands it
+#                                        the foreground when it launches.
+#                            'visible'   on screen: watchable and log-in-able, and
+#                                        it will take the foreground.
+#                            To log into a site, switch to 'visible' for that one
+#                            session; cookies stay in the persistent profile.
+#   headless: 'auto'         An explicit true/false overrides `visibility`.
+#                            'auto' follows the visibility policy.
+#   activateOnSelect: false  Whether `browser_tab` select raises the OS window.
+#   channel: 'auto'          'auto' probes msedge/chrome, then falls back to a
+#                            bundled chromium. 'bundled' skips the probe. Pin a
+#                            real channel ('chrome', 'msedge', 'chromium') to
+#                            skip the probing altogether.
+#   ignoreHTTPSErrors: false validate TLS by default; true accepts any certificate.
+#   acceptDownloads: true    let pages trigger downloads into the profile directory.
+#   args: []                 extra Chromium arguments.
+#   userDataDir: ''          persistent profile; empty means <DSH_HOME>/browser/profile.
+#   screenshotDir: ''        empty means <DSH_HOME>/browser/shots.
+#   viewport: { width, height }
+#   navTimeoutMs: 30000      navigation deadline.
+#   actionTimeoutMs: 15000   per-action deadline.
+#   settleMs: 400            quiet period after an action, before the digest.
+#   maxDigestChars: 3500     digest budget; this is what keeps replies small.
+#   maxElements: 120         interactive elements listed per digest.
+#   maxTextLines: 24         visible-text lines kept per digest.
+#   consoleLimit: 200        console ring-buffer size.
+#
+# To override, match the row in your profile's cordis.patch.yml:
+#
+#   - id: dsh-browser
+#     config:
+#       channel: chrome
+#
+# To watch the agent work (or log in once):
+#
+#   - id: dsh-browser
+#     config:
+#       visibility: visible
+- insert:
+    - id: dsh-browser
+      name: '@hesixian/dsh-plugin-browser'

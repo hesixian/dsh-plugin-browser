@@ -1,0 +1,4 @@
+# Normalize every text file to LF in the repository, regardless of the authoring
+# platform. This repo is written on Windows; without this line a checkout on
+# Linux would test CRLF files that nobody edited.
+* text=auto eol=lf

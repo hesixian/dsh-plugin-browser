@@ -1,0 +1,67 @@
+{
+  "name": "@hesixian/dsh-plugin-browser",
+  "version": "0.1.0",
+  "description": "In-process Playwright browser tools for DSH: one resident browser, compact ref-indexed page digests, diff-only replies.",
+  "license": "MIT",
+  "author": "hesixian",
+  "type": "module",
+  "main": "lib/index.mjs",
+  "exports": {
+    ".": "./lib/index.mjs",
+    "./session": "./lib/session.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "playwright",
+    "browser-automation",
+    "ai-agent",
+    "token-efficiency"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hesixian/dsh-plugin-browser.git"
+  },
+  "homepage": "https://github.com/hesixian/dsh-plugin-browser#readme",
+  "bugs": {
+    "url": "https://github.com/hesixian/dsh-plugin-browser/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "verify": "node test/verify-tools.mjs",
+    "registry": "node test/registry.mjs",
+    "smoke": "node test/smoke.mjs",
+    "portability": "node test/portability.mjs",
+    "installer": "node test/installer.mjs",
+    "test": "npm run verify && npm run portability && npm run installer && npm run registry && npm run smoke",
+    "bench": "node bench/tokens.mjs"
+  },
+  "peerDependencies": {
+    "playwright-core": ">=1.40.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright-core": {
+      "optional": true
+    }
+  }
+}
